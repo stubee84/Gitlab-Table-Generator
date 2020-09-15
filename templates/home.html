@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="jumbotron">
+  <h1>Gitlab Table Generator</h1>
+  <p class="lead">The web app takes in your CSV file or string and converts to a Gitlab table</p>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="row">
+          <ul class="navbar-nav justify-content-end">
+            {% csrf_token %}
+            <li class="nav-item dropdown" >
+              <a class="nav-link dropdown-toggle" data-toggle="dropdown" id="csv_select" name="csv_select" href="#" role="button" aria-haspopup="true" aria-expanded="false">Selection</a>
+              <div class="dropdown-menu dropdown-menu-left"id="selection" name="selection">
+                <a class="dropdown-item-text text-muted mb-0" id="text" name="text" href="#" role="button" aria-haspopup="true" aria-expanded="false">Text</a>
+                <a class="dropdown-item-text text-muted mb-1" id="file" name="file" href="#" role="button" aria-haspopup="true" aria-expanded="false">File</a>
+                <a class="dropdown-item-text text-muted mb-2" id="query" name="query" href="#" role="button" aria-haspopup="true" aria-expanded="false">Query</a>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="row">
+          <textarea name="text_input" id="text_input" cols="40" rows="5" style="display: none;">CSV String</textarea>
+        </div>
+        <div class="row">
+          <input type="file" id="file_input" name="file_input" style="display: none;">
+        </div>
+        <div class="row">
+          <b id="conn_string" style="display: none;">Connection String:</b>
+          <input type="text" name="conn_input" id="conn_input" style="display: none;" value="dialect://user:pass@host:port/dbname" size="40"/>
+        </div>
+        <div class="row">
+          <b id="query_string" style="display: none;">Query</b>
+          <input type="text" name="query_input" id="query_input" style="display: none;" value="SELECT * from `table_name`" size="40"/>
+        </div>
+        <br>
+        <div class="row">
+          <b id="line_limit" name="line_limit" style="display: none;">Line Limit:</b> 
+            <input type="text" name="limit" id="limit" style="display: none;" value="0,10"> 
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <textarea name="output" id="output" cols="60" rows="10">Table Results</textarea>
+      </div>
+    </div>
+    <div class="row">
+      <input type="button" id="convert" name="convert" class="btn btn-primary btn-large" value="convert">
+    </div>
+  </div>
+</div>
+<script>
+  var csv;
+  var limit;
+  var type;
+  var fd;
+
+  function sendString(data) {
+    $.ajax({
+      url: "/generatetable",
+      type: "POST",
+      dataType: "json",
+      data: data,
+      success: function(e) {
+        if (e.success) {
+          $("#output").text(e.success);
+        }
+        else if (e.failure) {
+          console.log(e.failure);
+          return;
+        }
+      },
+      error: function(err) {
+        console.log(err);
+      }
+    });
+  }
+
+  function sendFile(data) {
+    $.ajax({
+      url: "/generatetable",
+      type: "post",
+      processData: false,
+      contentType: false,
+      cache: false,
+      timeout: 800000,
+      data: data,
+      success: function(e) {
+        if (e.success) {
+          $("#output").text(e.success);
+        }
+        else if (e.failure) {
+          console.log(e.failure);
+          return;
+        }
+      },
+      error: function(e) {
+        console.log(e);
+      }
+    });
+  }
+
+  function sendForm() {
+    var data = {
+        "csv": "",
+        "limit": $("#limit").val(),
+        "type": ""
+    }
+    
+    if(data.limit == "" || !data.limit.includes(',')) {
+      data.limit = "0,10";
+    }
+
+    if ($("#text_input").val() !== "CSV String") {
+      data.csv = $("#text_input").val();
+      data.type = "string";
+
+      sendString(data);
+    } else if($("#query_input").val() != "SELECT * from `table_name`") {
+      data["query"] = $("#query_input").val();
+      data["connection"] = $("#conn_input").val();
+      data.type = "query";
+
+      sendString(data);
+    } else {
+      var fd = new FormData();
+
+      data.type = "file";
+      var input = $("#file_input");
+
+      fd.append('csv', input[0].files[0]);
+      fd.append('type', "file");
+      fd.append('limit', data.limit);
+
+      sendFile(fd);
+    }
+  }
+  $("#convert").on({
+    enter: function(){
+      sendForm();
+    },
+    click: function(){
+      sendForm();
+    }
+  });
+
+  $("#text").on({
+    click: function(){
+      $("#text_input").attr("style","visibility: visible");
+
+      $("#file_input").attr("style","visibility: hidden");
+      $("#conn_string").attr("style","visibility: hidden");
+      $("#query_string").attr("style","visibility: hidden");
+      $("#conn_input").attr("style","visibility: hidden");
+      $("#query_input").attr("style","visibility: hidden");
+
+      $("#line_limit").attr("style","visibility: visible");
+      $("#limit").attr("style","visibility: visible");
+    }
+  });
+  $("#file").on({
+    click: function(){
+      $("#file_input").attr("style","visibility: visible");
+
+      $("#text_input").attr("style","visibility: hidden")
+      $("#conn_string").attr("style","visibility: hidden");
+      $("#query_string").attr("style","visibility: hidden");
+      $("#conn_input").attr("style","visibility: hidden");
+      $("#query_input").attr("style","visibility: hidden");
+
+      $("#line_limit").attr("style","visibility: visible");
+      $("#limit").attr("style","visibility: visible");
+    }
+  });
+  $("#query").on({
+    click: function() {
+      $("#conn_string").attr("style","visibility: visible");
+      $("#query_string").attr("style","visibility: visible");
+      $("#conn_input").attr("style","visibility: visible");
+      $("#query_input").attr("style","visibility: visible");
+
+      $("#text_input").attr("style","visibility: hidden");
+      $("#file_input").attr("style","visibility: hidden");
+
+      $("#line_limit").attr("style","visibility: visible");
+      $("#limit").attr("style","visibility: visible");
+    }
+  });
+</script>
+{% endblock %}
