@@ -14,6 +14,7 @@
               <div class="dropdown-menu dropdown-menu-left"id="selection" name="selection">
                 <a class="dropdown-item-text text-muted mb-0" id="text" name="text" href="#" role="button" aria-haspopup="true" aria-expanded="false">Text</a>
                 <a class="dropdown-item-text text-muted mb-1" id="file" name="file" href="#" role="button" aria-haspopup="true" aria-expanded="false">File</a>
+                <a class="dropdown-item-text text-muted mb-2" id="web" name="web" href="#" role="button" aria-haspopup="true" aria-expanded="false">Web</a>
                 <a class="dropdown-item-text text-muted mb-2" id="query" name="query" href="#" role="button" aria-haspopup="true" aria-expanded="false">Query</a>
               </div>
             </li>
@@ -26,11 +27,15 @@
           <input type="file" id="file_input" name="file_input" style="display: none;">
         </div>
         <div class="row">
-          <b id="conn_string" style="display: none;">Connection String:</b>
-          <input type="text" name="conn_input" id="conn_input" style="display: none;" value="dialect://user:pass@host:port/dbname" size="40"/>
+          <b id="url" style="display: none;">Url:</b>
+          <input type="text" name="url_input" id="url_input" style="display: none;" value="https://YourUrlWithHtmlTablesHere.com" size="50"/>
+          <b id="table" style="display: none;">Table Name:</b>
+          <input type="text" name="table_input" id="table_input" style="display: none;" value="Table Name on webpage" size="40"/>
         </div>
         <div class="row">
-          <b id="query_string" style="display: none;">Query</b>
+          <b id="conn_string" style="display: none;">Connection String:</b>
+          <input type="text" name="conn_input" id="conn_input" style="display: none;" value="dialect://user:pass@host:port/dbname" size="40"/>
+          <b id="query_string" style="display: none;">Query:</b>
           <input type="text" name="query_input" id="query_input" style="display: none;" value="SELECT * from `table_name`" size="40"/>
         </div>
         <br>
@@ -121,6 +126,12 @@
       data.type = "query";
 
       sendString(data);
+    } else if($("#url_input").val() != "https://YourUrlWithHtmlTablesHere.com" && $("#table_input").val() != "Table Name on webpage" ){
+      data["url"] = $("#url_input").val();
+      data["table_name"] = $("#table_input").val();
+      data.type = "url";
+
+      sendString(data);
     } else {
       var fd = new FormData();
 
@@ -148,6 +159,10 @@
       $("#text_input").attr("style","visibility: visible");
 
       $("#file_input").attr("style","visibility: hidden");
+      $("#url").attr("style","visibility: hidden");
+      $("#url_input").attr("style","visibility: hidden");
+      $("#table").attr("style","visibility: hidden");
+      $("#table_input").attr("style","visibility: hidden");
       $("#conn_string").attr("style","visibility: hidden");
       $("#query_string").attr("style","visibility: hidden");
       $("#conn_input").attr("style","visibility: hidden");
@@ -162,6 +177,28 @@
       $("#file_input").attr("style","visibility: visible");
 
       $("#text_input").attr("style","visibility: hidden")
+      $("#url").attr("style","visibility: hidden");
+      $("#url_input").attr("style","visibility: hidden");
+      $("#table").attr("style","visibility: hidden");
+      $("#table_input").attr("style","visibility: hidden");
+      $("#conn_string").attr("style","visibility: hidden");
+      $("#query_string").attr("style","visibility: hidden");
+      $("#conn_input").attr("style","visibility: hidden");
+      $("#query_input").attr("style","visibility: hidden");
+
+      $("#line_limit").attr("style","visibility: visible");
+      $("#limit").attr("style","visibility: visible");
+    }
+  });
+  $("#web").on({
+    click: function(){
+      $("#url").attr("style","visibility: visible; padding: 10px;");
+      $("#url_input").attr("style","visibility: visible");
+      $("#table").attr("style","visibility: visible; padding: 10px;");
+      $("#table_input").attr("style","visibility: visible");
+
+      $("#file_input").attr("style","visibility: hidden");
+      $("#text_input").attr("style","visibility: hidden")
       $("#conn_string").attr("style","visibility: hidden");
       $("#query_string").attr("style","visibility: hidden");
       $("#conn_input").attr("style","visibility: hidden");
@@ -173,13 +210,17 @@
   });
   $("#query").on({
     click: function() {
-      $("#conn_string").attr("style","visibility: visible");
-      $("#query_string").attr("style","visibility: visible");
+      $("#conn_string").attr("style","visibility: visible; padding: 10px;");
+      $("#query_string").attr("style","visibility: visible; padding: 10px;");
       $("#conn_input").attr("style","visibility: visible");
       $("#query_input").attr("style","visibility: visible");
 
       $("#text_input").attr("style","visibility: hidden");
       $("#file_input").attr("style","visibility: hidden");
+      $("#url").attr("style","visibility: hidden");
+      $("#url_input").attr("style","visibility: hidden");
+      $("#table").attr("style","visibility: hidden");
+      $("#table_input").attr("style","visibility: hidden");
 
       $("#line_limit").attr("style","visibility: visible");
       $("#limit").attr("style","visibility: visible");
