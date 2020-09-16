@@ -36,6 +36,11 @@ def generate_table(request: request.HttpRequest):
             result = ctg.csv_to_gitlab_table(file=io.StringIO(csv_data),limit=limit)
         else:
             result = get_file_chunk(file=csv_data, limit=limit)
+    elif t == "url":
+        url = request.POST.get('url')
+        table_name = request.POST.get('table_name')
+
+        result = ctg.csv_to_gitlab_table(url_info=[url,table_name], limit=limit)
     elif t == "query":
         query = request.POST['query']
         conn_string = request.POST['connection']

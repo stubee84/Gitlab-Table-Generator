@@ -3,10 +3,11 @@ from . import config
 from io import StringIO
 
 class csv_to_gitlab_table:
-    def __init__(self, file = None, string: str = '', query: str = '', conn_string: str = '', limit: list = [], strip_char: str = ''):
+    def __init__(self, file = None, string: str = '', query: str = '', url_info: list = [], conn_string: str = '', limit: list = [], strip_char: str = ''):
         self.string = string
         self.file = file
         self.query = query
+        self.url_info = url_info
         self.conn_string = conn_string
         self.strip_char = strip_char
         self.input = ""
@@ -23,6 +24,10 @@ class csv_to_gitlab_table:
         elif self.query != '':
             self.output = self.sql_to_gitlab_table()
             self.input = self.query
+        elif self.url_info != []:
+            self.url = url_info[0]
+            self.table_name = url_info[1]
+            self.output = self.convert_html_to_string()
     
     def convert_csv_file(self) -> str:
         df = pd.read_csv(filepath_or_buffer=self.file, nrows=self.limit[len(self.limit)-1])
@@ -66,6 +71,31 @@ class csv_to_gitlab_table:
         
         #strip extra | from end of string, strip space, and strip extra newline at end of the string
         return string.rstrip('|').strip(' ').rstrip('\n')
+    
+    def convert_html_to_string(self) -> str:
+        if self.url != '':
+            table = self.get_html_table(input=self.url, match=self.table_name)
+        
+        headers = table.columns.tolist()
+        string = '| ' + ' | '.join(headers) + ' |\n'
+        string += '|' + ' ------ |'*(len(headers)) + '\n'
+
+        if self.limit[len(self.limit)-1] > len(table):
+            self.limit[len(self.limit)-1] = len(table)
+        for i in range(self.limit[len(self.limit)-1]):
+            string += '|'
+            for header in headers:
+                string += ' ' + str(table[header][i]) + ' |'
+            string += '\n'
+
+        return string
+    
+    def get_html_table(self, input: str = '', match: str = '') -> pd.DataFrame:
+        table = pd.read_html(io=input, match=match)
+        df = table[0]
+
+        self.input = df.to_html()
+        return df
     
     def sql_to_gitlab_table(self) -> str:
         db = config.database(query=self.query, connection_string=self.conn_string, limit=self.limit)
